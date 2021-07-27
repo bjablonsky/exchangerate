@@ -1,0 +1,65 @@
+﻿@page "/rates"
+@using ExchangeRate.Web.Shared
+@using System.Reflection
+@inject HttpClient Http
+
+<h1>Fetch Exchange Rates</h1>
+
+<p>Show the exchanges rates from the API.</p>
+
+<div class="row">
+    <div class="col-3">
+        <select class="form-control selectpicker" @bind="_countryCode">
+            @foreach (var property in typeof(Rate).GetProperties())
+            {
+                <option value="@property.Name">@property.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-2">
+        <button class="btn btn-primary" @onclick="FetchRates">Fetch Rates</button>
+    </div>
+</div>
+
+<br />
+<br />
+
+@if (_exchangeRates != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Country Code</th>
+                <th>Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var property in typeof(Rate).GetProperties())
+            {
+                <tr>
+                    <td>@property.Name</td>
+                    <td>@property.GetValue(_exchangeRates.Rates)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    #nullable enable
+    private ExchangeRates? _exchangeRates;
+    #nullable disable
+    private string _countryCode;
+
+    /*
+    protected override async Task OnInitializedAsync()
+    {
+        
+    }
+    */
+
+    private async Task FetchRates()
+    {
+        _exchangeRates = await Http.GetFromJsonAsync<ExchangeRates>("api/ExchangeRate/" + _countryCode);
+    }
+}

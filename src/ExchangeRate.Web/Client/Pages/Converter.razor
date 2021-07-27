@@ -1,0 +1,63 @@
+﻿@page "/converter"
+@using ExchangeRate.Web.Shared
+@using System.Reflection
+@inject HttpClient Http
+
+<h1>Currency Converter</h1>
+
+<p>Input your currency and select which currency you want to convert to.</p>
+
+<p>Source Currency</p>
+<div class="row align-items-end">
+    <div class="col-2">
+        <label for="amount">Amount:</label>
+        <input id="amount" class="form-control" type="text" @bind="_sourceAmount">
+    </div>
+    <div class="col-1">
+        <label for="fromCurrency">From:</label>
+        <select id="fromCurrency" class="form-control selectpicker" @bind="_countryCodeFrom">
+            @foreach (var property in typeof(Rate).GetProperties())
+            {
+                <option value="@property.Name">@property.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-1">
+        <label for="toCurrency">To:</label>
+        <select id="toCurrency" class="form-control selectpicker" @bind="_countryCodeTo">
+            @foreach (var property in typeof(Rate).GetProperties())
+            {
+                <option value="@property.Name">@property.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-2">
+        <button class="btn btn-primary" @onclick="Convert">Convert</button>
+    </div>
+</div>
+<br />
+<div class="row">
+    <div class="col-4">
+        <p>Converted Currency: @_convertedAmount</p>
+    </div>
+</div>
+
+@code {
+    #nullable enable
+    private ExchangeRates? _exchangeRates;
+    private decimal? _convertedAmount;
+    #nullable disable
+
+    private string _countryCodeFrom;
+    private string _countryCodeTo;
+    private decimal _sourceAmount;
+
+
+    private async Task Convert()
+    {
+        _exchangeRates = await Http.GetFromJsonAsync<ExchangeRates>("api/ExchangeRate/" + _countryCodeFrom);
+        decimal conversionRate = 0.0M;
+        Decimal.TryParse(_exchangeRates.Rates.GetType().GetProperty(_countryCodeTo).GetValue(_exchangeRates.Rates).ToString(), out conversionRate);
+        _convertedAmount = _sourceAmount * conversionRate;
+    }
+}
